@@ -77,6 +77,12 @@ projectRouter.put('/:projectId/tasks/:taskId',
   TaskController.updateTaskById
 )
 
+projectRouter.patch('/:projectId/tasks/:taskId',
+  body('status').notEmpty().withMessage('Status cannot be empty'),
+  handleInputValidation,
+  TaskController.updateTaskStatus
+)
+
 projectRouter.delete('/:projectId/tasks/:taskId',
   param('projectId').isMongoId().withMessage('Invalid Project ID'),
   param('taskId').isMongoId().withMessage('Invalid Task ID'),
