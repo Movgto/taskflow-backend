@@ -1,4 +1,4 @@
-import Task from "../models/Task";
+import Task, { ITask } from "../models/Task";
 import type { Request, Response } from "express";
 
 export default class TaskController {
@@ -54,7 +54,7 @@ export default class TaskController {
       }
 
       res.json({
-        task: await task.populate('project')
+        task
       })  
     } catch (error) {
       res.status(500).send('Something went wrong when trying to get the requested information')
@@ -95,6 +95,27 @@ export default class TaskController {
       ])
 
       res.send('Task was successfully deleted from the database! Now go fuck yourself!')
+    } catch (error) {
+      res.status(500).json({error})
+    }
+  }
+
+  static updateTaskStatus = async (req: Request, res: Response) => {
+    try {
+      const task = req.task
+      const project = req.project
+
+      if (task.project.toString() !== project.id) {
+        return res.status(400).send('Invalid request')
+      }
+
+      const status : ITask['status'] = req.body.status
+      if (status) {
+        task.status = status
+
+        await task.save()
+        return res.send('Status was updated successfully!')
+      }
     } catch (error) {
       res.status(500).json({error})
     }
