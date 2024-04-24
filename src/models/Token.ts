@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose'
+import { generateToken } from '../utils/authUtils'
 
 interface IToken extends Document {
   token: string
@@ -9,7 +10,7 @@ interface IToken extends Document {
 const tokenSchema : Schema = new Schema({
   token: {
     type: String,
-    required: true,    
+    default: generateToken(),    
   },
   user: {
     type: Types.ObjectId,
