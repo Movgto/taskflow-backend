@@ -20,8 +20,7 @@ router.post('/create-account',
   AuthController.createAccount
 )
 
-router.post('/confirm-account',
-  query('userId').notEmpty().withMessage('User cannot be empty'),
+router.post('/confirm-account',  
   body('token').notEmpty().withMessage('Token cannot be empty'),
   handleInputValidation,
   AuthController.confirmAccount
