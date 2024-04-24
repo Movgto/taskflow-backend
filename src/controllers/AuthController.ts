@@ -53,19 +53,8 @@ export class AuthController {
 
   static confirmAccount= async (req: Request, res: Response) => {
     const token = req.body.token
-    const userId = req.query.userId
 
-    try {
-      console.log(userId)
-      const userExists = await User.findById(userId)
-
-      console.log(userExists)
-
-      if (!userExists) {
-        const error = new Error('The user doesn\'t exist in the database')
-
-        return res.status(404).json({error: error.message})
-      }
+    try {      
 
       const tokenExists = await Token.findOne({token})
 
@@ -75,20 +64,23 @@ export class AuthController {
         return res.status(404).json({error: error.message})
       }
 
-      if (tokenExists.user.toString() === userExists.id) {
-        userExists.confirmed = true
+      const userExists = await User.findById(tokenExists.user)
 
-        await Promise.allSettled([
-          tokenExists.deleteOne(),
-          userExists.save()
-        ])
-
-        return res.send('Your account has been confirmed, you can now login!')
+      if (!userExists) {
+        return res.json({
+          error: 'The user linked to this token doesn\'t exist anymore'
+        })
       }
+      
+      userExists.confirmed = true
 
-      res.status(500).json({
-        error: 'Sorry, something went wrong when trying to confirm your account, please try again later'
-      })
+      await Promise.allSettled([
+        tokenExists.deleteOne(),
+        userExists.save()
+      ])
+
+      return res.send('Your account has been confirmed, you can now login!')
+            
     } catch (error) {
       res.status(500).json({
         error: 'Sorry, something went wrong when trying to confirm your account, please try again later'
@@ -107,6 +99,38 @@ export class AuthController {
 
         return res.status(404).json({error: error.message})
       }
+
+      if (!userExists.confirmed) {
+        const tokenExists = await Token.findOne({
+          user: userExists.id
+        })
+
+        if (tokenExists) {
+          const error = new Error('Your account has not been confirmed yet, please check your email')
+
+          return res.status(409).json({
+            error: error.message
+          })
+        }
+
+        const token = new Token()
+
+        token.user = userExists.id
+
+        token.save()
+
+        await Mailing.sendConfirmationEmail({
+          email: userExists.email,
+          name: userExists.name,
+          token: token.token
+        })
+
+        const error = new Error('Your account has not been confirmed yet. We have sent you a confirmation code to your email.')
+
+        return res.status(409).json({
+          error: error.message
+        })
+      }
       
       const passwordMatch = await compare(password, userExists.password)
 
@@ -115,6 +139,7 @@ export class AuthController {
 
         res.status(409).json({error: error.message})
       }
+
       
       res.send(`Welcome ${userExists.name}`)
     } catch (error) {
