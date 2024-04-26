@@ -54,9 +54,13 @@ export class AuthController {
   static confirmAccount= async (req: Request, res: Response) => {
     const token = req.body.token
 
+    console.log(token)
+
     try {      
 
       const tokenExists = await Token.findOne({token})
+
+      console.log
 
       if (!tokenExists) {
         const error = new Error('The Token provided is not valid')
@@ -117,9 +121,9 @@ export class AuthController {
 
         token.user = userExists.id
 
-        token.save()
+        await token.save()
 
-        await Mailing.sendConfirmationEmail({
+        Mailing.sendConfirmationEmail({
           email: userExists.email,
           name: userExists.name,
           token: token.token
@@ -137,11 +141,117 @@ export class AuthController {
       if (!passwordMatch) {
         const error = new Error('The password provided is incorrect')
 
-        res.status(409).json({error: error.message})
+        return res.status(409).json({error: error.message})
       }
 
       
       res.send(`Welcome ${userExists.name}`)
+    } catch (error) {
+      
+      res.status(500).json({
+        error: 'We could\'t handle the requested action, please try again later.'
+      })
+    }
+  }
+
+  static forgotPassword = async (req: Request, res: Response) => {
+    const {email} = req.body
+    try {
+      const userExists = await User.findOne({email})
+
+      if (!userExists) {
+        const error = new Error('An user with the provided email was not found')
+
+        return res.status(404).json({error: error.message})
+      }
+
+      const tokenExists = await Token.findOne({
+        user: userExists.id
+      })
+
+      if (tokenExists) {
+        const error = new Error('We have already sent you the intructions. Please check your email.')
+        return res.status(409).json({error: error.message})
+      }
+
+      const token = new Token()
+
+      token.user = userExists.id
+
+      Mailing.sendResetPasswordInstructions({
+       name: userExists.name,
+       email: userExists.email,
+       token: token.token
+      })
+
+      await token.save()
+
+      res.send('We have sent instructions of how to reset your password, please check your email.')
+      
+    } catch (error) {
+      res.status(500).json({
+        error: 'We could\'t handle the requested action, please try again later.'
+      })
+    }
+  }
+
+  static validateToken = async (req: Request, res: Response) => {
+    const {token} = req.params
+
+    try {
+      const tokenExists = await Token.findOne({token})
+
+      if (!tokenExists) {
+        const error = new Error('Invalid Token')
+        return res.status(404).json({error: error.message})
+      }
+
+      const userExists = await User.findById(tokenExists.user)
+
+      if (!userExists) {
+        const error = new Error('An user with the provided email was not found')
+
+        return res.status(404).json({error: error.message})
+      }
+
+      res.send('You can reset your password now!')
+
+    } catch (error) {
+      res.status(500).json({
+        error: 'We could\'t handle the requested action, please try again later.'
+      })
+    }
+  }
+
+  static resetPassword = async (req: Request, res: Response) => {
+    const {password} = req.body
+    const {token} = req.params
+    try {
+      const tokenExists = await Token.findOne({token})
+
+      if (!tokenExists) {
+        const error = new Error('The time for resetting your password is over, please try again.')
+        return res.status(404).json({
+          error: error.message
+        })
+      }
+
+      const userExists = await User.findById(tokenExists.user)
+
+      if (!userExists) {
+        const error = new Error('An user with the provided token was not found')
+
+        return res.status(404).json({error: error.message})
+      }
+
+      userExists.password = await hashPassword(password)
+
+      await Promise.allSettled([
+        tokenExists.deleteOne(),
+        userExists.save()
+      ])
+
+      res.send('Your password has been updated correctly!')
     } catch (error) {
       
     }
