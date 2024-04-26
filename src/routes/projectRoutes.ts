@@ -5,8 +5,11 @@ import { handleInputValidation } from "../middleware/validation";
 import TaskController from "../controllers/TaskController";
 import { projectValidation } from "../middleware/project";
 import { taskValidation } from "../middleware/task";
+import { authenticate } from "../middleware/auth";
 
 const projectRouter = Router()
+
+projectRouter.use(authenticate)
 
 projectRouter.post('/',
   body('projectName').notEmpty().withMessage('Project name cannot be empty'),
