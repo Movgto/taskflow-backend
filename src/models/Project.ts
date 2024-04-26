@@ -1,11 +1,13 @@
 import mongoose, { Schema, Document, PopulatedDoc, Types } from "mongoose";
 import { ITask } from "./Task";
+import { IUser } from "./User";
 
 export type ProjectType = Document & {
   projectName: string
   clientName: string
   description: string
   tasks: PopulatedDoc<ITask>[]
+  manager: PopulatedDoc<IUser>
 }
 
 const ProjectSchema : Schema = new Schema({
@@ -29,7 +31,11 @@ const ProjectSchema : Schema = new Schema({
       type: Types.ObjectId,
       ref: 'Task'
     }
-  ]
+  ],
+  manager: {
+    type: Types.ObjectId,
+    ref: 'User'
+  }
 })
 
 const Project = mongoose.model<ProjectType>('Project', ProjectSchema)
