@@ -1,4 +1,6 @@
 import { genSalt, hash } from "bcrypt"
+import { Types } from "mongoose"
+import jwt from 'jsonwebtoken'
 
 export const hashPassword = async (pwd: string) => {
   const salt = await genSalt(10)
@@ -12,4 +14,16 @@ export const generateToken = () => {
   const token = Math.floor(1000 + Math.random() * 900000)
 
   return token.toString()
+}
+
+export type UserDataJWT = {
+  id: Types.ObjectId
+}
+
+export const generateJWT = (userData : UserDataJWT) => {
+  const token = jwt.sign(userData, process.env.JWT_SECRET!, {
+    expiresIn: '180d'
+  })
+
+  return token
 }
