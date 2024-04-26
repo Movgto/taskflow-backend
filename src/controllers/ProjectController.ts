@@ -4,7 +4,12 @@ import Project from "../models/Project"
 export class ProjectController {
   static createProject = async (req: Request, res: Response) => {    
     try {
-      await Project.create(req.body)
+      const project = new Project(req.body)
+      
+      project.manager = req.user.id
+
+      await project.save()
+
       res.send('Project has been created successfully!')
     } catch (err) {
       console.log(err)
@@ -15,7 +20,7 @@ export class ProjectController {
 
   static getAllProjects = async (req: Request, res: Response) => {    
     try {
-      const projects = await Project.find().populate('tasks')
+      const projects = await Project.find({manager: req.user.id}).populate('tasks')
       res.json({
         data: projects
       })
@@ -35,6 +40,13 @@ export class ProjectController {
         const error = new Error('Project not found')
 
         return res.status(404).json({
+          error: error.message
+        })
+      }
+
+      if (project.manager.toString() !== req.user.id) {
+        const error = new Error('Not authorized for this action')
+        return res.status(401).json({
           error: error.message
         })
       }
