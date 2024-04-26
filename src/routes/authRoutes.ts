@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { AuthController } from "../controllers/AuthController"
-import { body, query } from "express-validator"
+import { body, param, query } from "express-validator"
 import { handleInputValidation } from "../middleware/validation"
 
 const router = Router()
@@ -31,6 +31,32 @@ router.post('/login',
   body('password').notEmpty().withMessage('Password cannot be empty'),
   handleInputValidation,
   AuthController.loginAccount
+)
+
+router.post('/forgot-password',
+  body('email').notEmpty().withMessage('Email cannot be empty'),
+  handleInputValidation,
+  AuthController.forgotPassword
+)
+
+router.post('/validate-token/:token',
+  param('token').isNumeric().withMessage('Invalid token'),
+  handleInputValidation,
+  AuthController.validateToken
+)
+
+router.post('/reset-password/:token',
+  param('token').isNumeric().withMessage('Invalid token'),
+  body('password').notEmpty().withMessage('Password cannot be empty'),
+  body('password_confirmation').custom((value, {req}) => {
+    if (value !== req.body.password) {
+      throw new Error('Passwords doesn\'t match')
+    }
+
+    return true
+  }),
+  handleInputValidation,
+  AuthController.resetPassword
 )
 
 export default router
