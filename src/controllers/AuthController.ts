@@ -1,6 +1,6 @@
 import type { Request, Response} from 'express'
 import User from '../models/User'
-import { generateToken, hashPassword } from '../utils/authUtils'
+import { generateJWT, generateToken, hashPassword } from '../utils/authUtils'
 import Token from '../models/Token'
 import Mailing from '../services/Mailing'
 import { compare } from 'bcrypt'
@@ -144,8 +144,16 @@ export class AuthController {
         return res.status(409).json({error: error.message})
       }
 
+      const jwtToken = generateJWT({id: userExists.id})
+
+      if (!jwtToken) {
+        const error = new Error('Something went wrong while authenticating to your account, please try again later')
+        return res.status(500).json({
+          error: error.message
+        })
+      }
       
-      res.send(`Welcome ${userExists.name}`)
+      res.send(jwtToken)
     } catch (error) {
       
       res.status(500).json({
