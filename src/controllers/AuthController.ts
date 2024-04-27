@@ -264,4 +264,14 @@ export class AuthController {
       
     }
   }
+
+  static getUser = async (req: Request, res: Response) => {
+    if (req.user) {
+      return res.json(req.user)
+    }
+
+    res.status(500).json({
+      error: 'We could\'t process that request, please try that later.'
+    })
+  }
 }
