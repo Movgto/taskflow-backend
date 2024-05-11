@@ -11,7 +11,7 @@ export const hashPassword = async (pwd: string) => {
 }
 
 export const generateToken = () => {
-  const token = Math.floor(1000 + Math.random() * 900000)
+  const token = Math.floor(100000 + Math.random() * 900000)
 
   return token.toString()
 }
