@@ -20,7 +20,14 @@ export class ProjectController {
 
   static getAllProjects = async (req: Request, res: Response) => {    
     try {
-      const projects = await Project.find({manager: req.user.id}).populate('tasks')
+      const projects = await Project.find({$or: [
+        {
+          manager: {$in: req.user.id}
+        },
+        { team: {$in: req.user.id}}
+      ]}).populate('tasks')
+
+      
       res.json({
         data: projects
       })
@@ -36,6 +43,11 @@ export class ProjectController {
       const { id } = req.params
       const project = await Project.findById(id).populate('tasks')
 
+      await project?.populate({
+        path: 'team',
+        select: 'id name email'
+      })
+
       if (!project) {
         const error = new Error('Project not found')
 
@@ -43,17 +55,15 @@ export class ProjectController {
           error: error.message
         })
       }
-
-      if (project.manager.toString() !== req.user.id) {
+      
+      if (project.manager.toString() !== req.user.id && !project.team.some(member => member.id === req.user.id)) {
         const error = new Error('Not authorized for this action')
         return res.status(401).json({
           error: error.message
         })
       }
       
-      res.json({
-        data: project
-      })
+      res.json(project)
     } catch (err) {
       res.status(400).json({
         error: ''
