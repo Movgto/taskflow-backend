@@ -6,9 +6,12 @@ import TaskController from "../controllers/TaskController";
 import { projectValidation } from "../middleware/project";
 import { taskValidation } from "../middleware/task";
 import { authenticate } from "../middleware/auth";
+import { TeamController } from "../controllers/TeamController";
+import { isManager } from "../middleware/authorization";
 
 const projectRouter = Router()
 
+// Authenticate user middleware for project routes
 projectRouter.use(authenticate)
 
 projectRouter.post('/',
@@ -28,6 +31,7 @@ projectRouter.get('/:id',
 )
 
 projectRouter.put('/:id',
+  isManager,
   param('id').isMongoId().withMessage('Invalid ID'),
   body('projectName').notEmpty().withMessage('Project name cannot be empty'),
   body('clientName').notEmpty().withMessage('Client name cannot be empty'),
@@ -37,6 +41,7 @@ projectRouter.put('/:id',
 )
 
 projectRouter.delete('/:id',
+  isManager,
   param('id').isMongoId().withMessage('Invalid ID'),
   handleInputValidation,
   ProjectController.deleteProduct
@@ -49,7 +54,7 @@ projectRouter.delete('/:id',
 projectRouter.param('projectId', projectValidation)
 
 projectRouter.post('/:projectId/tasks',
-  param('projectId').isMongoId().withMessage('Project ID cannot be empty'),
+  isManager,
   body('name').notEmpty().withMessage('Name of the task cannot be empty'),
   body('description').notEmpty().withMessage('Description cannot be empty'),
   handleInputValidation,
@@ -57,7 +62,6 @@ projectRouter.post('/:projectId/tasks',
 )
 
 projectRouter.get('/:projectId/tasks',
-  param('projectId').isMongoId().withMessage('Invalid ID'),
   handleInputValidation,
   TaskController.getTasks
 )
@@ -65,14 +69,13 @@ projectRouter.get('/:projectId/tasks',
 projectRouter.param('taskId', taskValidation)
 
 projectRouter.get('/:projectId/tasks/:taskId',
-  param('projectId').isMongoId().withMessage('Invalid Project ID'),
   param('taskId').isMongoId().withMessage('Invalid Task ID'),
   handleInputValidation,
   TaskController.getTaskById
 )
 
 projectRouter.put('/:projectId/tasks/:taskId',
-  param('projectId').isMongoId().withMessage('Invalid Project ID'),
+  isManager,
   param('taskId').isMongoId().withMessage('Invalid Task ID'),
   body('name').notEmpty().withMessage('Name of the task cannot be empty'),
   body('description').notEmpty().withMessage('Description cannot be empty'),
@@ -87,10 +90,37 @@ projectRouter.patch('/:projectId/tasks/:taskId',
 )
 
 projectRouter.delete('/:projectId/tasks/:taskId',
-  param('projectId').isMongoId().withMessage('Invalid Project ID'),
+  isManager,
   param('taskId').isMongoId().withMessage('Invalid Task ID'),
   handleInputValidation,
   TaskController.deleteTaskById
+)
+
+// Team members routes
+
+projectRouter.post('/:projectId/team/find',
+  isManager,
+  body('email').isEmail().toLowerCase().withMessage('Invalid email'),
+  handleInputValidation,
+  TeamController.findUser
+)
+
+projectRouter.post('/:projectId/team',
+  isManager,
+  body('id').isMongoId().withMessage('Invalid User ID'),
+  handleInputValidation,
+  TeamController.addMember
+)
+
+projectRouter.get('/:projectId/team',
+  TeamController.getMembers
+)
+
+projectRouter.delete('/:projectId/team',
+  isManager,
+  body('id').isMongoId().withMessage('Invalid User ID'),
+  handleInputValidation,
+  TeamController.removeMember
 )
 
 export default projectRouter
