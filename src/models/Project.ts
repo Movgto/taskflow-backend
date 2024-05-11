@@ -8,6 +8,7 @@ export type ProjectType = Document & {
   description: string
   tasks: PopulatedDoc<ITask>[]
   manager: PopulatedDoc<IUser>
+  team: PopulatedDoc<IUser>[]
 }
 
 const ProjectSchema : Schema = new Schema({
@@ -35,7 +36,13 @@ const ProjectSchema : Schema = new Schema({
   manager: {
     type: Types.ObjectId,
     ref: 'User'
-  }
+  },
+  team: [
+    {
+      type: Types.ObjectId,
+      ref: 'User'
+    }
+  ]
 })
 
 const Project = mongoose.model<ProjectType>('Project', ProjectSchema)
