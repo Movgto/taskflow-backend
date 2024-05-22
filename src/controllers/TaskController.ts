@@ -45,13 +45,16 @@ export default class TaskController {
 
   static getTaskById = async (req: Request, res: Response) => {
     try {
-      const task = req.task      
+      const task = await Task.findById(req.task.id).populate({
+        path: 'changeHistory.user',
+        select: 'email id name'
+      })
 
-      if (task.project.toString() !== req.project.id) {
+      if (!task || task.project.toString() !== req.project.id) {
         return res.status(400).json({
           error: 'Invalid action'
         })
-      }
+      }      
 
       res.json({
         task
@@ -112,6 +115,13 @@ export default class TaskController {
       const status : ITask['status'] = req.body.status
       if (status) {
         task.status = status
+
+        const changeData = {
+          user: req.user.id,
+          status
+        }
+
+        task.changeHistory.push(changeData)
 
         await task.save()
         return res.send('Status was updated successfully!')
