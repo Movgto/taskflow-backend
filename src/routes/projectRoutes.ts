@@ -8,6 +8,7 @@ import { taskValidation } from "../middleware/task";
 import { authenticate } from "../middleware/auth";
 import { TeamController } from "../controllers/TeamController";
 import { isManager } from "../middleware/authorization";
+import { NoteController } from "../controllers/NoteController";
 
 const projectRouter = Router()
 
@@ -121,6 +122,24 @@ projectRouter.delete('/:projectId/team',
   body('id').isMongoId().withMessage('Invalid User ID'),
   handleInputValidation,
   TeamController.removeMember
+)
+
+// Notes routes
+
+projectRouter.post('/:projectId/tasks/:taskId/notes',
+  body('content').notEmpty().withMessage('Content cannot be empty'),
+  handleInputValidation,
+  NoteController.createNote
+)
+
+projectRouter.get('/:projectId/tasks/:taskId/notes',
+  NoteController.getNotes
+)
+
+projectRouter.delete('/:projectId/tasks/:taskId/notes/:noteId',
+  param('noteId').isMongoId().withMessage('Note ID cannot be empty'),
+  handleInputValidation,
+  NoteController.deleteNote
 )
 
 export default projectRouter
