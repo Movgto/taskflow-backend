@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { AuthController } from "../controllers/AuthController"
-import { body, param, query } from "express-validator"
+import { body, param } from "express-validator"
 import { handleInputValidation } from "../middleware/validation"
 import { authenticate } from "../middleware/auth"
 
@@ -65,4 +65,33 @@ router.get('/user',
   AuthController.getUser
 )
 
+router.put('/user/profile',
+  authenticate,
+  body('name').notEmpty().withMessage('Name cannot be empty'),
+  body('email').isEmail().withMessage('Email cannot be empty'),
+  handleInputValidation,
+  AuthController.updateProfile
+)
+
+router.put('/user/change-password',
+  authenticate,
+  body('current_password').notEmpty().withMessage('Current password must not be empty'),
+  body('password').notEmpty().withMessage('Password must not be empty'),
+  body('password_confirmation').custom((value, {req}) => {
+    if (value !== req.body.password) {
+      throw new Error('Passwords must match')
+    }
+
+    return true
+  }),
+  handleInputValidation,
+  AuthController.changePassword
+)
+
+router.post('/user/check-password',
+  authenticate,
+  body('password').notEmpty().withMessage('The password must not be empty'),
+  handleInputValidation,
+  AuthController.checkPassword
+)
 export default router
