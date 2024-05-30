@@ -274,4 +274,80 @@ export class AuthController {
       error: 'We could\'t process that request, please try that later.'
     })
   }
+
+  static updateProfile = async (req: Request, res: Response) => {
+    const {email, name} = req.body
+    const {user} = req
+
+    try {
+      const userExists = await User.findOne({email})
+
+      if (userExists && user.id !== userExists.id) {
+        const error = new Error('The email is already taken')
+
+        return res.status(402).json({error: error.message})
+      }
+
+      if (userExists) {
+        userExists.email = email
+        userExists.name = name
+
+        await userExists.save()
+      }
+
+      res.send('Your profile information has been updated successfully!')
+    } catch (error) {
+      res.status(500).json({error})
+    }
+  }
+
+  static changePassword = async (req: Request, res: Response) => {
+
+    const {password, current_password} = req.body  
+
+    try {
+
+      const user = await User.findById(req.user.id)
+
+      console.log(password, current_password, user)
+
+      const passwordsMatch = await compare(current_password, user!.password)
+
+      if (!passwordsMatch) {
+        const error = new Error('The current password provided is not correct')
+        return res.status(403).json({error: error.message})
+      }
+
+
+      const hashedPassword = await hashPassword(password)
+
+      user!.password = hashedPassword
+
+      await user!.save()
+
+      res.send('Your password has been updated successfully!')
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({error})
+    }
+  }
+
+  static checkPassword = async (req: Request, res: Response) => {
+    const {password} = req.body
+
+    try {
+      const user = await User.findById(req.user.id)
+      console.log(password, user!.password)
+      const passwordMatch = await compare(password, user!.password)
+
+      if (!passwordMatch) {
+        const error = new Error('The password is not correct')
+        return res.status(403).json({error: error.message})
+      }
+
+      res.send('Password matches!')
+    } catch (error) {
+      res.status(500).json({error})
+    }
+  }
 }
