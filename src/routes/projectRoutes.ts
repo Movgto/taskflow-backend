@@ -31,8 +31,7 @@ projectRouter.get('/:id',
   ProjectController.getProjectById
 )
 
-projectRouter.put('/:id',
-  isManager,
+projectRouter.put('/:id',  
   param('id').isMongoId().withMessage('Invalid ID'),
   body('projectName').notEmpty().withMessage('Project name cannot be empty'),
   body('clientName').notEmpty().withMessage('Client name cannot be empty'),
@@ -41,8 +40,7 @@ projectRouter.put('/:id',
   ProjectController.updateProject
 )
 
-projectRouter.delete('/:id',
-  isManager,
+projectRouter.delete('/:id',  
   param('id').isMongoId().withMessage('Invalid ID'),
   handleInputValidation,
   ProjectController.deleteProduct
