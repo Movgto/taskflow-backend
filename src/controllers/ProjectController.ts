@@ -43,19 +43,20 @@ export class ProjectController {
       const { id } = req.params
       const project = await Project.findById(id).populate('tasks')
 
-      await project?.populate({
-        path: 'team',
-        select: 'id name email'
-      })
-
+      
       if (!project) {
         const error = new Error('Project not found')
-
+        
         return res.status(404).json({
           error: error.message
         })
       }
-      
+          
+      await project.populate({
+        path: 'team',
+        select: 'id name email'
+      })
+
       if (project.manager.toString() !== req.user.id && !project.team.some(member => member.id === req.user.id)) {
         const error = new Error('Not authorized for this action')
         return res.status(401).json({
