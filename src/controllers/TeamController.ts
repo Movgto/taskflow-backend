@@ -33,7 +33,7 @@ export class TeamController {
         })
       }
 
-      if (project.team.some(member => member.toString() === id)) {
+      if (project.team.some(member => member!.toString() === id)) {
         return res.status(409).json({error: 'The user you are trying to add to the project is already a member'})
       }
 
@@ -78,11 +78,11 @@ export class TeamController {
         })
       }
 
-      if (!project.team.some(member => member.toString() === id)) {
+      if (!project.team.some(member => member!.toString() === id)) {
         return res.status(409).json({error: 'The user you are trying to remove does not exist in the project'})
       }
 
-      project.team = project.team.filter(member => member.toString() !== id)
+      project.team = project.team.filter(member => member!.toString() !== id)
 
       await project.save()
 

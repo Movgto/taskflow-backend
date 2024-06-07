@@ -6,7 +6,7 @@ export const isManager = (req: Request, res: Response, next: NextFunction) => {
   console.log(user)
   console.log('---- Project ----')
   console.log(project)
-  if (user.id !== project.manager.toString()) {
+  if (user.id !== project.manager!.toString()) {
     return res.status(403).json({
       error: 'Unauthorized Action'
     })

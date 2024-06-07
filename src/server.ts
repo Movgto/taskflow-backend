@@ -15,7 +15,7 @@ connectDB()
 const server = express()
 
 // Uncomment the line below to enable CORS rules, see the CORS configuration file as imported on the top
-// server.use(cors(corsConfig))
+server.use(cors(corsConfig))
 
 server.use(morgan('dev'))
 
