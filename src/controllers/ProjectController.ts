@@ -57,7 +57,7 @@ export class ProjectController {
         select: 'id name email'
       })
 
-      if (project.manager.toString() !== req.user.id && !project.team.some(member => member.id === req.user.id)) {
+      if (project.manager!.toString() !== req.user.id && !project.team!.some(member => member.id === req.user.id)) {
         const error = new Error('Not authorized for this action')
         return res.status(401).json({
           error: error.message
