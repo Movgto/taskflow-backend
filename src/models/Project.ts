@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, PopulatedDoc, Types } from "mongoose";
-import { ITask } from "./Task";
+import Task, { ITask } from "./Task";
 import { IUser } from "./User";
 
 export type ProjectType = Document & {
@@ -43,6 +43,18 @@ const ProjectSchema : Schema = new Schema({
       ref: 'User'
     }
   ]
+})
+
+ProjectSchema.pre('deleteOne', {document: true}, async function() {
+  const projectId = this._id
+
+  if (!projectId) return
+
+  const tasks = await Task.find({project: projectId})
+
+  for (const task of tasks) {
+    await task.deleteOne()
+  }
 })
 
 const Project = mongoose.model<ProjectType>('Project', ProjectSchema)
