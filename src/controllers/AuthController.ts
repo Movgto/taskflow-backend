@@ -45,6 +45,7 @@ export class AuthController {
 
       res.send('A new User has been created successfully!')
     } catch (error) {
+      console.log(error)
       res.status(500).json({
         error
       })
