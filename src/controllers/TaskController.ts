@@ -97,7 +97,7 @@ export default class TaskController {
         req.project.save()
       ])
 
-      res.send('Task was successfully deleted from the database! Now go fuck yourself!')
+      res.send('Task was successfully deleted from the database!')
     } catch (error) {
       res.status(500).json({error})
     }
